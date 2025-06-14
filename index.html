@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Identificador de Pilotos - Alianza Rebelde</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%);
+      color: #fff;
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .star-field {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+      radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+      radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+      radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+      radial-gradient(2px 2px at 160px 30px, #fff, transparent);
+      background-repeat: repeat;
+      background-size: 200px 100px;
+      animation: twinkle 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes twinkle {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .rebel-header {
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid #ff6b35;
+      padding: 1rem 0;
+    }
+
+    .search-container {
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 2rem;
+      margin: 2rem 0;
+      border: 1px solid rgba(255,107,53,0.3);
+    }
+
+    .search-input {
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,107,53,0.5);
+      color: #fff;
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 1.1rem;
+    }
+
+    .search-input:focus {
+      background: rgba(255,255,255,0.15);
+      border-color: #ff6b35;
+      color: #fff;
+      box-shadow: 0 0 0 0.2rem rgba(255,107,53,0.25);
+    }
+
+    .search-input::placeholder {
+      color: rgba(255,255,255,0.6);
+    }
+
+    .btn-rebel {
+      background: linear-gradient(45deg, #ff6b35, #f7931e);
+      border: none;
+      color: #fff;
+      font-weight: bold;
+      border-radius: 10px;
+      padding: 0.75rem 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .btn-rebel:hover {
+      background: linear-gradient(45deg, #f7931e, #ff6b35);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255,107,53,0.4);
+      color: #fff;
+    }
+
+    .ship-card {
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,107,53,0.3);
+      border-radius: 15px;
+      margin-bottom: 1.5rem;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .ship-card:hover {
+      border-color: #ff6b35;
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(255,107,53,0.2);
+    }
+
+    .ship-header {
+      background: linear-gradient(45deg, rgba(255,107,53,0.2), rgba(247,147,30,0.2));
+      padding: 1.5rem;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,107,53,0.3);
+    }
+
+    .ship-details {
+      padding: 1.5rem;
+      background: rgba(0,0,0,0.5);
+    }
+
+    .pilot-card {
+      background: rgba(255,107,53,0.1);
+      border: 1px solid rgba(255,107,53,0.3);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .pilot-card:hover {
+      background: rgba(255,107,53,0.2);
+      border-color: #ff6b35;
+    }
+
+    .loading-spinner {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .spinner {
+      border: 4px solid rgba(255,107,53,0.3);
+      border-radius: 50%;
+      border-top: 4px solid #ff6b35;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 3rem;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .badge-rebel {
+      background: linear-gradient(45deg, #ff6b35, #f7931e);
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .collapse-icon {
+      transition: transform 0.3s ease;
+    }
+
+    .collapsed .collapse-icon {
+      transform: rotate(-90deg);
+    }
+  </style>
+</head>
+<body>
+<div class="star-field"></div>
+
+<!-- Header -->
+<header class="rebel-header">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h1 class="mb-0">
+          <i class="fas fa-rebel me-3" style="color: #ff6b35;"></i>
+          Identificador de Pilotos
+        </h1>
+        <p class="mb-0 text-muted">Tablero de Inteligencia - Alianza Rebelde</p>
+      </div>
+      <div class="col-md-4 text-end">
+        <button class="btn btn-outline-light" onclick="goBack()">
+          <i class="fas fa-arrow-left me-2"></i>
+          Regresar
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Search Section -->
+<div class="container">
+  <div class="search-container">
+    <div class="row">
+      <div class="col-md-8">
+        <input
+                type="text"
+                id="shipSearch"
+                class="form-control search-input"
+                placeholder="Buscar nave estelar (ej. Millennium Falcon, X-wing, TIE Fighter...)"
+        >
+      </div>
+      <div class="col-md-4">
+        <button class="btn btn-rebel w-100" onclick="searchShips()">
+          <i class="fas fa-search me-2"></i>
+          Buscar Nave
+        </button>
+      </div>
+    </div>
+    <div class="mt-3">
+      <small class="text-muted">
+        <i class="fas fa-info-circle me-1"></i>
+        Ingresa el nombre de una nave para encontrar sus pilotos conocidos
+      </small>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p class="mt-3">Consultando base de datos imperial...</p>
+  </div>
+
+  <!-- Results -->
+  <div id="results"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const API_BASE = 'https://swapi.dev/api';
+
+  // Permitir búsqueda con Enter
+  document.getElementById('shipSearch').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      searchShips();
+    }
+  });
+
+  async function searchShips() {
+    const searchTerm = document.getElementById('shipSearch').value.trim();
+    if (!searchTerm) {
+      alert('Por favor ingresa el nombre de una nave');
+      return;
+    }
+
+    showLoading(true);
+    clearResults();
+
+    try {
+      // Buscar en starships
+      const starshipsResponse = await fetch(`${API_BASE}/starships/?search=${encodeURIComponent(searchTerm)}`);
+      const starshipsData = await starshipsResponse.json();
+
+      // Buscar en vehicles
+      const vehiclesResponse = await fetch(`${API_BASE}/vehicles/?search=${encodeURIComponent(searchTerm)}`);
+      const vehiclesData = await vehiclesResponse.json();
+
+      const allShips = [
+        ...starshipsData.results.map(ship => ({...ship, type: 'starship'})),
+        ...vehiclesData.results.map(ship => ({...ship, type: 'vehicle'}))
+      ];
+
+      if (allShips.length === 0) {
+        showNoResults();
+      } else {
+        await displayShips(allShips);
+      }
+    } catch (error) {
+      console.error('Error al buscar naves:', error);
+      showError('Error al consultar la base de datos imperial. Intenta nuevamente.');
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  async function displayShips(ships) {
+    const resultsContainer = document.getElementById('results');
+    let html = `<h3 class="mb-4"><i class="fas fa-rocket me-2" style="color: #ff6b35;"></i>Naves Encontradas: ${ships.length}</h3>`;
+
+    for (let i = 0; i < ships.length; i++) {
+      const ship = ships[i];
+      const pilots = await getPilots(ship.pilots);
+
+      html += `
+                    <div class="ship-card">
+                        <div class="ship-header" data-bs-toggle="collapse" data-bs-target="#ship-${i}" aria-expanded="false">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h4 class="mb-1">
+                                        <i class="fas fa-space-shuttle me-2" style="color: #ff6b35;"></i>
+                                        ${ship.name}
+                                    </h4>
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        <span class="badge badge-rebel">
+                                            ${ship.type === 'starship' ? 'Nave Estelar' : 'Vehículo'}
+                                        </span>
+                                        <span class="badge bg-secondary">
+                                            ${pilots.length} Piloto${pilots.length !== 1 ? 's' : ''}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <i class="fas fa-chevron-down collapse-icon" style="color: #ff6b35;"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="collapse" id="ship-${i}">
+                            <div class="ship-details">
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <h6><i class="fas fa-cog me-2"></i>Especificaciones Técnicas</h6>
+                                        <ul class="list-unstyled">
+                                            <li><strong>Modelo:</strong> ${ship.model}</li>
+                                            <li><strong>Fabricante:</strong> ${ship.manufacturer}</li>
+                                            <li><strong>Longitud:</strong> ${ship.length} m</li>
+                                            <li><strong>Velocidad máxima:</strong> ${ship.max_atmosphering_speed}</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6><i class="fas fa-users me-2"></i>Capacidad</h6>
+                                        <ul class="list-unstyled">
+                                            <li><strong>Tripulación:</strong> ${ship.crew}</li>
+                                            <li><strong>Pasajeros:</strong> ${ship.passengers}</li>
+                                            <li><strong>Carga:</strong> ${ship.cargo_capacity}</li>
+                                            <li><strong>Consumibles:</strong> ${ship.consumables}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="pilots-section">
+                                    <h6><i class="fas fa-user-astronaut me-2"></i>Pilotos Conocidos (${pilots.length})</h6>
+                                    ${pilots.length > 0 ? renderPilots(pilots) : '<p class="text-muted">No hay pilotos registrados para esta nave.</p>'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+    }
+
+    resultsContainer.innerHTML = html;
+
+    // Añadir event listeners para animación de collapse
+    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(element => {
+      element.addEventListener('click', function() {
+        const icon = this.querySelector('.collapse-icon');
+        this.classList.toggle('collapsed');
+      });
+    });
+  }
+
+  function renderPilots(pilots) {
+    return pilots.map(pilot => `
+                <div class="pilot-card">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="mb-1">
+                                <i class="fas fa-user me-2" style="color: #ff6b35;"></i>
+                                ${pilot.name}
+                            </h6>
+                            <div class="d-flex gap-3 small text-muted">
+                                <span><i class="fas fa-venus-mars me-1"></i>${pilot.gender}</span>
+                                <span><i class="fas fa-birthday-cake me-1"></i>${pilot.birth_year}</span>
+                                <span><i class="fas fa-eye me-1"></i>${pilot.eye_color}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="small">
+                                <div><strong>Altura:</strong> ${pilot.height} cm</div>
+                                <div><strong>Peso:</strong> ${pilot.mass} kg</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+  }
+
+  async function getPilots(pilotUrls) {
+    if (!pilotUrls || pilotUrls.length === 0) return [];
+
+    try {
+      const pilotPromises = pilotUrls.map(url => fetch(url).then(res => res.json()));
+      const pilots = await Promise.all(pilotPromises);
+      return pilots;
+    } catch (error) {
+      console.error('Error al obtener pilotos:', error);
+      return [];
+    }
+  }
+
+  function showLoading(show) {
+    document.getElementById('loading').style.display = show ? 'block' : 'none';
+  }
+
+  function clearResults() {
+    document.getElementById('results').innerHTML = '';
+  }
+
+  function showNoResults() {
+    document.getElementById('results').innerHTML = `
+                <div class="no-results">
+                    <i class="fas fa-search" style="font-size: 3rem; color: #ff6b35; opacity: 0.5;"></i>
+                    <h4 class="mt-3">No se encontraron naves</h4>
+                    <p>No se encontraron naves que coincidan con tu búsqueda.<br>
+                    Intenta con términos como "Millennium", "X-wing", "TIE", "Star Destroyer", etc.</p>
+                </div>
+            `;
+  }
+
+  function showError(message) {
+    document.getElementById('results').innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${message}
+                </div>
+            `;
+  }
+
+  function goBack() {
+    // Aquí puedes implementar la navegación de regreso
+    // Por ejemplo, usando history.back() o redirigiendo a la página principal
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      alert('Función de regreso - implementar navegación a dashboard principal');
+    }
+  }
+
+  // Inicialización
+  document.addEventListener('DOMContentLoaded', function() {
+    // Aquí puedes agregar cualquier inicialización necesaria
+    console.log('Identificador de Pilotos - Sistema iniciado');
+  });
+</script>
+</body>
+</html>
